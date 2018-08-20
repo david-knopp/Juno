@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Juno
 {
@@ -40,6 +41,38 @@ namespace Juno
             bindings.Add( instance );
             QueueForInject( instance );
         }
+
+        public void Unbind<T>()
+        {
+            var bindings = GetAnonymousBindings( typeof( T ) );
+            bindings.Clear();
+        }
+
+        public bool TryGet<T>( out T instance )
+        {
+            var bindings = GetAnonymousBindings( typeof( T ) );
+            if ( bindings.Count > 0 )
+            {
+                instance = ( T )bindings[0];
+                return true;
+            }
+            else
+            {
+                instance = default( T );
+                return false;
+            }
+        }
+
+        public T Get<T>()
+        {
+            T instance;
+            if ( TryGet( out instance ) )
+            {
+                return instance;
+            }
+
+            throw new KeyNotFoundException( string.Format( "DIContainer.Get: No anonymous bindings exist for type '{0}'", typeof( T ).FullName ) );
+        }
         #endregion // anonymous
 
         #region named
@@ -60,6 +93,39 @@ namespace Juno
             var typeBindings = GetNamedTypeBindings( type );
             typeBindings.Add( id, instance );
             QueueForInject( instance );
+        }
+
+        public void Unbind<T>( int id )
+        {
+            var bindings = GetNamedTypeBindings( typeof( T ) );
+            bindings.Remove( id );
+        }
+
+        public bool TryGet<T>( int id, out T instance )
+        {
+            var bindings = GetNamedTypeBindings( typeof( T ) );
+            object objInst;
+            if ( bindings.TryGetValue( id, out objInst ) )
+            {
+                instance = ( T )objInst;
+                return true;
+            }
+            else
+            {
+                instance = default( T );
+                return false;
+            }
+        }
+
+        public T Get<T>( int id )
+        {
+            T instance;
+            if ( TryGet( id, out instance ) )
+            {
+                return instance;
+            }
+
+            throw new KeyNotFoundException( string.Format( "DIContainer.Get: No bindings exist for type '{0}' with id '{1}'", typeof( T ).FullName, id ) );
         }
         #endregion // named
         #endregion // binding
