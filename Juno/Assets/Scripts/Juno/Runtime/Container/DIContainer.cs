@@ -9,8 +9,7 @@ namespace Juno
         #region public
         public DIContainer()
         {
-            m_namedBindings = new Dictionary<Type, Dictionary<int, object>>();
-            m_anonymousBindings = new Dictionary<Type, List<object>>();
+            m_namedBindings = new Dictionary<Type, Dictionary<int?, object>>();
             m_injectQueue = new HashSet<object>();
         }
 
@@ -30,15 +29,15 @@ namespace Juno
 
         public void Bind( Type type, object instance )
         {
-            var bindings = GetAnonymousBindings( type );
-            bindings.Add( instance );
+            var bindings = GetBindingsForType( type );
+            bindings.Add( null, instance );
             QueueForInject( instance );
         }
 
         public void Unbind<T>()
         {
-            var bindings = GetAnonymousBindings( typeof( T ) );
-            bindings.Clear();
+            var bindings = GetBindingsForType( typeof( T ) );
+            bindings.Remove( null );
         }
 
         public bool TryGet<T>( out T instance )
@@ -58,17 +57,8 @@ namespace Juno
 
         public bool TryGet( Type type, out object instance )
         {
-            var bindings = GetAnonymousBindings( type );
-            if ( bindings.Count > 0 )
-            {
-                instance = bindings[0];
-                return true;
-            }
-            else
-            {
-                instance = default( object );
-                return false;
-            }
+            Dictionary<int?, object> bindings = GetBindingsForType( type );
+            return bindings.TryGetValue( null, out instance );
         }
 
         public T Get<T>()
@@ -80,20 +70,6 @@ namespace Juno
             }
 
             throw new InvalidOperationException( string.Format( "No anonymous bindings exist for type '{0}'", typeof( T ).FullName ) );
-        }
-
-        public bool TryGet<T>( out List<T> instances )
-        {
-            List<object> bindings;
-
-            if ( m_anonymousBindings.TryGetValue( typeof( T ), out bindings ) )
-            {
-                instances = bindings.Cast<T>().ToList();
-                return true;
-            }
-
-            instances = default( List<T> );
-            return false;
         }
         #endregion // anonymous
 
@@ -112,14 +88,14 @@ namespace Juno
 
         public void Bind( Type type, object instance, int id )
         {
-            var typeBindings = GetNamedTypeBindings( type );
+            var typeBindings = GetBindingsForType( type );
             typeBindings.Add( id, instance );
             QueueForInject( instance );
         }
 
         public void Unbind<T>( int id )
         {
-            var bindings = GetNamedTypeBindings( typeof( T ) );
+            var bindings = GetBindingsForType( typeof( T ) );
             bindings.Remove( id );
         }
 
@@ -140,7 +116,7 @@ namespace Juno
 
         public bool TryGet( Type type, int id, out object instance )
         {
-            var bindings = GetNamedTypeBindings( type );
+            var bindings = GetBindingsForType( type );
             return bindings.TryGetValue( id, out instance );
         }
 
@@ -158,16 +134,8 @@ namespace Juno
 
         public List<T> GetAll<T>()
         {
-            Dictionary<int, object> namedBindings = GetNamedTypeBindings( typeof( T ) );
-            List<T> bindings = namedBindings.Values.Cast<T>().ToList();
-
-            List<object> anonymousBindings;
-            if ( m_anonymousBindings.TryGetValue( typeof( T ), out anonymousBindings ) )
-            {
-                bindings.AddRange( anonymousBindings.Cast<T>() );
-            }
-            
-            return bindings;
+            Dictionary<int?, object> namedBindings = GetBindingsForType( typeof( T ) );
+            return namedBindings.Values.Cast<T>().ToList();
         }
         #endregion // binding
 
@@ -187,48 +155,22 @@ namespace Juno
 
                     foreach ( ParamInjectInfo paramInjectInfo in methodInjectInfo.ParamInfo )
                     {
-                        // anonymous params
-                        if ( paramInjectInfo.IsAnonymous )
+                        object instance;
+                        if ( TryGet( paramInjectInfo.Type, paramInjectInfo.ID.Value, out instance ) )
                         {
-                            object instance;
-                            if ( TryGet( paramInjectInfo.Type, out instance ) )
-                            {
-                                methodArguments.Add( instance );
-                            }
-                            else
-                            {
-                                // no binding exists, error if not optional
-                                if ( paramInjectInfo.IsOptional == false )
-                                {
-                                    // TODO(dak): is throwing the correct choice here? If Flushing the inject queue, all subsequent objects won't get injected
-                                    throw new InvalidOperationException( string.Format( "No binding of type '{0}' exists for attempted injection '{1}'", 
-                                                                                        paramInjectInfo.Type, 
-                                                                                        methodInjectInfo.MethodInfo.Name ) );
-                                }
-
-                                methodArguments.Add( null );
-                            }
+                            methodArguments.Add( instance );
                         }
-                        // named params
                         else
                         {
-                            object instance;
-                            if ( TryGet( paramInjectInfo.Type, paramInjectInfo.ID.Value, out instance ) )
+                            if ( paramInjectInfo.IsOptional == false )
                             {
-                                methodArguments.Add( instance );
+                                throw new InvalidOperationException( string.Format( "No binding of type '{0}' with ID '{1}' exists for attempted injection '{2}'",
+                                                                                    paramInjectInfo.Type,
+                                                                                    paramInjectInfo.ID.Value,
+                                                                                    methodInjectInfo.MethodInfo.Name ) );
                             }
-                            else
-                            {
-                                if ( paramInjectInfo.IsOptional == false )
-                                {
-                                    throw new InvalidOperationException( string.Format( "No binding of type '{0}' with ID '{1}' exists for attempted injection '{2}'",
-                                                                                        paramInjectInfo.Type,
-                                                                                        paramInjectInfo.ID.Value,
-                                                                                        methodInjectInfo.MethodInfo.Name ) );
-                                }
 
-                                methodArguments.Add( null );
-                            }
+                            methodArguments.Add( null );
                         }
                     }
 
@@ -254,29 +196,15 @@ namespace Juno
         #endregion // public
 
         #region private
-        private Dictionary<Type, Dictionary<int, object>> m_namedBindings;
-        private Dictionary<Type, List<object>> m_anonymousBindings;
+        private Dictionary<Type, Dictionary<int?, object>> m_namedBindings;
         private HashSet<object> m_injectQueue;
 
-        private List<object> GetAnonymousBindings( Type type )
+        private Dictionary<int?, object> GetBindingsForType( Type type )
         {
-            List<object> bindings;
-
-            if ( m_anonymousBindings.TryGetValue( type, out bindings ) == false )
-            {
-                bindings = new List<object>();
-                m_anonymousBindings.Add( type, bindings );
-            }
-
-            return bindings;
-        }
-
-        private Dictionary<int, object> GetNamedTypeBindings( Type type )
-        {
-            Dictionary<int, object> typeBindings;
+            Dictionary<int?, object> typeBindings;
             if ( m_namedBindings.TryGetValue( type, out typeBindings ) == false )
             {
-                typeBindings = new Dictionary<int, object>();
+                typeBindings = new Dictionary<int?, object>();
                 m_namedBindings.Add( type, typeBindings );
             }
 
