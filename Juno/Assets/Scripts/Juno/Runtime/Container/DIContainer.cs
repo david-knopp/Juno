@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Juno
 {
-    public class DIContainer
+    public sealed class DIContainer
     {
         #region public
         public DIContainer()
@@ -41,12 +41,12 @@ namespace Juno
             bindings.Clear();
         }
 
-        public bool TryGetFirst<T>( out T instance )
+        public bool TryGet<T>( out T instance )
         {
-            var bindings = GetAnonymousBindings( typeof( T ) );
-            if ( bindings.Count > 0 )
+            object objInstance;
+            if ( TryGet( typeof( T ), out objInstance ) )
             {
-                instance = ( T )bindings[0];
+                instance = ( T )objInstance;
                 return true;
             }
             else
@@ -56,15 +56,30 @@ namespace Juno
             }
         }
 
-        public T GetFirst<T>()
+        public bool TryGet( Type type, out object instance )
+        {
+            var bindings = GetAnonymousBindings( type );
+            if ( bindings.Count > 0 )
+            {
+                instance = bindings[0];
+                return true;
+            }
+            else
+            {
+                instance = default( object );
+                return false;
+            }
+        }
+
+        public T Get<T>()
         {
             T instance;
-            if ( TryGetFirst( out instance ) )
+            if ( TryGet( out instance ) )
             {
                 return instance;
             }
 
-            throw new InvalidOperationException( string.Format( "DIContainer.GetFirst: No anonymous bindings exist for type '{0}'", typeof( T ).FullName ) );
+            throw new InvalidOperationException( string.Format( "No anonymous bindings exist for type '{0}'", typeof( T ).FullName ) );
         }
 
         public bool TryGet<T>( out List<T> instances )
@@ -79,17 +94,6 @@ namespace Juno
 
             instances = default( List<T> );
             return false;
-        }
-
-        public List<T> Get<T>()
-        {
-            List<T> instances;
-            if ( TryGet( out instances ) )
-            {
-                return instances;
-            }
-
-            throw new InvalidOperationException( string.Format( "DIContainer.Get: No anonymous bindings exist for type '{0}'", typeof( T ).FullName ) );
         }
         #endregion // anonymous
 
@@ -121,11 +125,10 @@ namespace Juno
 
         public bool TryGet<T>( int id, out T instance )
         {
-            var bindings = GetNamedTypeBindings( typeof( T ) );
-            object objInst;
-            if ( bindings.TryGetValue( id, out objInst ) )
+            object objInstance;
+            if ( TryGet( typeof( T ), id, out objInstance ) )
             {
-                instance = ( T )objInst;
+                instance = ( T )objInstance;
                 return true;
             }
             else
@@ -133,6 +136,12 @@ namespace Juno
                 instance = default( T );
                 return false;
             }
+        }
+
+        public bool TryGet( Type type, int id, out object instance )
+        {
+            var bindings = GetNamedTypeBindings( type );
+            return bindings.TryGetValue( id, out instance );
         }
 
         public T Get<T>( int id )
@@ -143,7 +152,7 @@ namespace Juno
                 return instance;
             }
 
-            throw new KeyNotFoundException( string.Format( "DIContainer.Get: No bindings exist for type '{0}' with id '{1}'", typeof( T ).FullName, id ) );
+            throw new KeyNotFoundException( string.Format( "No bindings exist for type '{0}' with id '{1}'", typeof( T ).FullName, id ) );
         }
         #endregion // named
 
@@ -165,7 +174,67 @@ namespace Juno
         #region injection
         public void Inject( object obj )
         {
+            if ( obj != null )
+            {
+                Type objType = obj.GetType();
+                TypeInjectInfo typeInfo = TypeAnalyzer.GetTypeInjectInfo( objType );
 
+                // inject methods
+                foreach ( MethodInjectInfo methodInjectInfo in typeInfo.MethodInfo )
+                {
+                    // get desired arguments to inject
+                    List<object> methodArguments = new List<object>();
+
+                    foreach ( ParamInjectInfo paramInjectInfo in methodInjectInfo.ParamInfo )
+                    {
+                        // anonymous params
+                        if ( paramInjectInfo.IsAnonymous )
+                        {
+                            object instance;
+                            if ( TryGet( paramInjectInfo.Type, out instance ) )
+                            {
+                                methodArguments.Add( instance );
+                            }
+                            else
+                            {
+                                // no binding exists, error if not optional
+                                if ( paramInjectInfo.IsOptional == false )
+                                {
+                                    // TODO(dak): is throwing the correct choice here? If Flushing the inject queue, all subsequent objects won't get injected
+                                    throw new InvalidOperationException( string.Format( "No binding of type '{0}' exists for attempted injection '{1}'", 
+                                                                                        paramInjectInfo.Type, 
+                                                                                        methodInjectInfo.MethodInfo.Name ) );
+                                }
+
+                                methodArguments.Add( null );
+                            }
+                        }
+                        // named params
+                        else
+                        {
+                            object instance;
+                            if ( TryGet( paramInjectInfo.Type, paramInjectInfo.ID.Value, out instance ) )
+                            {
+                                methodArguments.Add( instance );
+                            }
+                            else
+                            {
+                                if ( paramInjectInfo.IsOptional == false )
+                                {
+                                    throw new InvalidOperationException( string.Format( "No binding of type '{0}' with ID '{1}' exists for attempted injection '{2}'",
+                                                                                        paramInjectInfo.Type,
+                                                                                        paramInjectInfo.ID.Value,
+                                                                                        methodInjectInfo.MethodInfo.Name ) );
+                                }
+
+                                methodArguments.Add( null );
+                            }
+                        }
+                    }
+
+                    methodInjectInfo.MethodInfo.Invoke( obj, methodArguments.ToArray() );
+                }
+            }
         }
 
         public void FlushInjectQueue()
