@@ -7,7 +7,7 @@ namespace Juno
                      AllowMultiple = false )]
     public sealed class InjectAttribute : PreserveAttribute
     {
-        public int? Id
+        public int Id
         {
             get;
             set;
