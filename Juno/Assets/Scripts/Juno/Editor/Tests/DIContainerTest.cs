@@ -9,6 +9,11 @@ namespace Juno.Test
         private class TestClass
         {
             public string m_id;
+
+            [Inject]
+            private void Inject()
+            {
+            }
         }
 
         #region Bind
@@ -92,5 +97,36 @@ namespace Juno.Test
             Assert.AreEqual( testObj, container.Get<TestClass>( id ) );
         }
         #endregion // Get
+
+        #region Injection
+        private class InjectTestClassA
+        {
+            public string ID
+            {
+                get;
+                private set;
+            }
+
+            [Inject]
+            private void Inject( string id )
+            {
+                ID = id;
+            }
+        }
+
+        [Test]
+        public void Inject( [Values( "TestID" )] string id )
+        {
+            DIContainer container = new DIContainer();
+            InjectTestClassA testClass = new InjectTestClassA();
+
+            container.Bind( id );
+            container.Bind( testClass );
+
+            container.FlushInjectQueue();
+
+            Assert.AreEqual( testClass.ID, id );
+        }
+        #endregion // Injection
     }
 }
