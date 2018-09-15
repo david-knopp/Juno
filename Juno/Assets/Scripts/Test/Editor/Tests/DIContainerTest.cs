@@ -114,8 +114,31 @@ namespace Juno.Test
             }
         }
 
+        private class InjectTestClassB
+        {
+            public string Value1
+            {
+                get;
+                private set;
+            }
+
+            public string Value2
+            {
+                get;
+                private set;
+            }
+
+            [Inject]
+            private void Inject( [Inject( ID = 1 )] string value1,
+                                 [Inject( ID = 2 )] string value2 )
+            {
+                Value1 = value1;
+                Value2 = value2;
+            }
+        }
+
         [Test]
-        public void Inject( [Values( "TestID" )] string id )
+        public void Inject_SingleViaBind( [Values( "TestID" )] string id )
         {
             DIContainer container = new DIContainer();
             InjectTestClassA testClass = new InjectTestClassA();
@@ -126,6 +149,81 @@ namespace Juno.Test
             container.FlushInjectQueue();
 
             Assert.AreEqual( testClass.ID, id );
+        }
+
+        [Test]
+        public void Inject_SingleViaManualInject( [Values( "TestID" )] string id )
+        {
+            DIContainer container = new DIContainer();
+            InjectTestClassA testClass = new InjectTestClassA();
+
+            container.Bind( id );
+            container.Inject( testClass );
+
+            Assert.AreEqual( testClass.ID, id );
+        }
+
+        [Test]
+        public void Inject_SingleViaInjectQueue( [Values( "TestID" )] string id )
+        {
+            DIContainer container = new DIContainer();
+            InjectTestClassA testClass = new InjectTestClassA();
+
+            container.Bind( id );
+            container.QueueForInject( testClass );
+            container.FlushInjectQueue();
+
+            Assert.AreEqual( testClass.ID, id );
+        }
+
+        [Test]
+        public void Inject_MultipleViaBind( [Values( "Value1" )] string value1,
+                                            [Values( "Value2" )] string value2 )
+        {
+            DIContainer container = new DIContainer();
+            InjectTestClassB testClass = new InjectTestClassB();
+
+            container.Bind( value1, 1 );
+            container.Bind( value2, 2 );
+            container.Bind( testClass );
+
+            container.FlushInjectQueue();
+
+            Assert.AreEqual( testClass.Value1, value1 );
+            Assert.AreEqual( testClass.Value2, value2 );
+        }
+
+        [Test]
+        public void Inject_MultipleViaManualInject( [Values( "Value1" )] string value1,
+                                                    [Values( "Value2" )] string value2 )
+        {
+            DIContainer container = new DIContainer();
+            InjectTestClassB testClass = new InjectTestClassB();
+
+            container.Bind( value1, 1 );
+            container.Bind( value2, 2 );
+
+            container.Inject( testClass );
+
+            Assert.AreEqual( testClass.Value1, value1 );
+            Assert.AreEqual( testClass.Value2, value2 );
+        }
+
+        [Test]
+        public void Inject_MultipleViaInjectQueue( [Values( "Value1" )] string value1,
+                                                 [Values( "Value2" )] string value2 )
+        {
+            DIContainer container = new DIContainer();
+            InjectTestClassB testClass = new InjectTestClassB();
+
+            container.Bind( value1, 1 );
+            container.Bind( value2, 2 );
+            container.QueueForInject( testClass );
+
+            container.FlushInjectQueue();
+
+            Assert.AreEqual( testClass.Value1, value1 );
+            Assert.AreEqual( testClass.Value2, value2 );
         }
         #endregion // Injection
     }

@@ -59,7 +59,7 @@ namespace Juno
                 {
                     InjectAttribute injectAttribute = ( InjectAttribute )injectAttributes[0];
                     injectableParamInfo = new ParamInjectInfo( type: paramInfo.ParameterType, 
-                                                               id: injectAttribute.Id, 
+                                                               id: injectAttribute.ID, 
                                                                isOptional: injectAttribute.IsOptional );
                 }
                 // no inject attribute available
