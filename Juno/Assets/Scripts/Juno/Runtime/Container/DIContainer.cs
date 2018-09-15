@@ -97,7 +97,7 @@ namespace Juno
                     foreach ( ParamInjectInfo paramInjectInfo in methodInjectInfo.ParamInfo )
                     {
                         object instance;
-                        int id = paramInjectInfo.ID.HasValue ? c_defaultID : paramInjectInfo.ID.Value;
+                        int id = ( paramInjectInfo.ID.HasValue == false )? c_defaultID : paramInjectInfo.ID.Value;
 
                         if ( TryGet( paramInjectInfo.Type, out instance, id ) )
                         {
