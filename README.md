@@ -1,2 +1,2 @@
-# Juno Dependency Injection for Unity
-A dependency injection framework made for the Unity
+# Juno - Dependency Injection for Unity
+A lightweight dependency injection framework made for the Unity platform
