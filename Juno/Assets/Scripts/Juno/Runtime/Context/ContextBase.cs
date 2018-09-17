@@ -14,6 +14,21 @@ namespace Juno
         #endregion // public
 
         #region protected
+        protected void InstallBindings<T>( List<T> installers ) where T : IInstaller
+        {
+            for ( int i = 0; i < installers.Count; i++ )
+            {
+                IInstaller installer = installers[i];
+                if ( installer != null )
+                {
+                    installer.InstallBindings( Container );
+                }
+                else
+                {
+                    throw new System.NullReferenceException( string.Format( "Null installer reference found in context '{0}'", name ) );
+                }
+            }
+        }
         #endregion // protected
 
         #region private
