@@ -14,6 +14,12 @@ namespace Juno
             m_bindings = new Dictionary<Type, Dictionary<int, object>>();
             m_injectQueue = new HashSet<object>();
         }
+
+        public DIContainer ParentContainer
+        {
+            get;
+            set;
+        }
         
         #region binding
         public void Bind<T>( int id = c_defaultID )
@@ -49,11 +55,13 @@ namespace Juno
                 instance = ( T )objInstance;
                 return true;
             }
-            else
+            else if ( ParentContainer != null )
             {
-                instance = default( T );
-                return false;
+                return ParentContainer.TryGet( out instance, id );
             }
+
+            instance = default( T );
+            return false;
         }
 
         public bool TryGet( Type type, out object instance, int id = c_defaultID )
