@@ -14,6 +14,18 @@ namespace Juno
         #endregion // public
 
         #region protected
+        protected virtual void OnPreInject()
+        {
+        }
+
+        protected virtual void OnAwake()
+        {
+        }
+
+        protected virtual void OnStart()
+        {
+        }
+
         protected void InstallBindings<T>( List<T> installers ) where T : IInstaller
         {
             for ( int i = 0; i < installers.Count; i++ )
@@ -34,6 +46,24 @@ namespace Juno
         #region private
         [SerializeField] private List<MonoBehaviourInstaller> m_monoBehaviourInstallers;
         [SerializeField] private List<ScriptableObjectInstaller> m_scriptableObjectInstallers;
+
+        private void Awake()
+        {
+            // run installers
+            InstallBindings( m_monoBehaviourInstallers );
+            InstallBindings( m_scriptableObjectInstallers );
+
+            OnAwake();
+        }
+
+        private void Start()
+        {
+            // inject
+            OnPreInject();
+            Container.FlushInjectQueue();
+
+            OnStart();
+        }
         #endregion // private
     }
 }
