@@ -44,13 +44,11 @@ namespace Juno
         }
         #endregion // public
 
-        #region private
-        private const string c_resourceName = "ProjectContext";
-        private static ProjectContext m_instance;
-        private static bool m_isApplicationQuitting;
-
-        private void Awake()
+        #region protected
+        protected override void OnAwake()
         {
+            base.OnAwake();
+
             if ( HasInstance == false )
             {
                 m_instance = this;
@@ -60,9 +58,15 @@ namespace Juno
             {
                 throw new NotSupportedException( "Multiple ProjectContext instances detected - use of multiple instances is not supported" );
             }
-            
+
             DontDestroyOnLoad( gameObject );
         }
+        #endregion // protected
+
+        #region private
+        private const string c_resourceName = "ProjectContext";
+        private static ProjectContext m_instance;
+        private static bool m_isApplicationQuitting;
 
         private void OnApplicationQuit()
         {

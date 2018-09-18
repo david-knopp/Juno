@@ -15,7 +15,7 @@ namespace Juno
             m_injectQueue = new HashSet<object>();
         }
 
-        public DIContainer ParentContainer
+        public DIContainer Parent
         {
             get;
             set;
@@ -55,9 +55,9 @@ namespace Juno
                 instance = ( T )objInstance;
                 return true;
             }
-            else if ( ParentContainer != null )
+            else if ( Parent != null )
             {
-                return ParentContainer.TryGet( out instance, id );
+                return Parent.TryGet( out instance, id );
             }
 
             instance = default( T );
