@@ -1,0 +1,10 @@
+{
+    "name": "Test.Runtime",
+    "references": [
+        "Runtime"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false
+}
