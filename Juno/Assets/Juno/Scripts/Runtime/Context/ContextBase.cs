@@ -28,17 +28,20 @@ namespace Juno
 
         protected void InstallBindings<T>( List<T> installers ) where T : IInstaller
         {
-            for ( int i = 0; i < installers.Count; i++ )
+            if ( installers != null )
             {
-                IInstaller installer = installers[i];
-                if ( installer != null )
+                for ( int i = 0; i < installers.Count; i++ )
                 {
-                    installer.InstallBindings( Container );
-                }
-                else
-                {
-                    throw new System.NullReferenceException( string.Format( "Null installer reference found in context '{0}'", name ) );
-                }
+                    IInstaller installer = installers[i];
+                    if ( installer != null )
+                    {
+                        installer.InstallBindings( Container );
+                    }
+                    else
+                    {
+                        throw new System.NullReferenceException( string.Format( "Null installer reference found in context '{0}'", name ) );
+                    }
+                } 
             }
         }
         #endregion // protected
@@ -49,6 +52,8 @@ namespace Juno
 
         private void Awake()
         {
+            Container = new DIContainer();
+
             // run installers
             InstallBindings( m_monoBehaviourInstallers );
             InstallBindings( m_scriptableObjectInstallers );

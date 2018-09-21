@@ -2,7 +2,6 @@
 using UnityEngine.SceneManagement;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Juno
 {
@@ -12,7 +11,6 @@ namespace Juno
         {
             Transform rootTransform = gameObject.transform;
             MonoBehaviour[] childBehaviors = gameObject.GetComponentsInChildren<MonoBehaviour>( true );
-            List<Transform> contextTransforms = childBehaviors.OfType<ContextBase>().Select( x => x.transform ).ToList();
 
             foreach ( var behavior in childBehaviors )
             {
