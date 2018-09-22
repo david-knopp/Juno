@@ -6,14 +6,19 @@ namespace Juno
     public abstract class ContextBase : MonoBehaviour
     {
         #region public
-        public DIContainer Container
+        public virtual DIContainer GetContainer()
         {
-            get;
-            private set;
+            return Container;
         }
         #endregion // public
 
         #region protected
+        protected DIContainer Container
+        {
+            get;
+            private set;
+        }
+
         protected virtual void OnPreInject()
         {
         }
