@@ -5,6 +5,18 @@ namespace Juno
 {
     public sealed class SceneContext : ContextBase
     {
+        #region public
+        static SceneContext()
+        {
+            s_sceneContexts = new Dictionary<string, SceneContext>();
+        }
+
+        public static bool TryGetSceneContext( string scenePath, out SceneContext sceneContext )
+        {
+            return s_sceneContexts.TryGetValue( scenePath, out sceneContext );
+        }
+        #endregion // public
+
         #region protected
         protected override void OnAwake()
         {
@@ -20,13 +32,16 @@ namespace Juno
         #endregion // protected
 
         #region private
+        private static Dictionary<string, SceneContext> s_sceneContexts;
+
         private void OnEnable()
         {
-            // TODO: register this scene's context somewhere
+            s_sceneContexts.Add( gameObject.scene.path, this );
         }
 
         private void OnDisable()
         {
+            s_sceneContexts.Remove( gameObject.scene.path );
         }
 
         private void QueueSceneObjectsForInject()
