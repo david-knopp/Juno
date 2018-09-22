@@ -17,12 +17,12 @@ namespace Juno
         protected override void OnPreInject()
         {
             base.OnPreInject();
-            QueueSceneObjectsForInject();
+            QueueChildrenAndSelfForInject();
         }
         #endregion // protected
 
         #region private
-        private void QueueSceneObjectsForInject()
+        private void QueueChildrenAndSelfForInject()
         {
             List<MonoBehaviour> behaviors = InjectUtils.GetInjectableMonoBehaviours( gameObject );
             foreach ( var behavior in behaviors )

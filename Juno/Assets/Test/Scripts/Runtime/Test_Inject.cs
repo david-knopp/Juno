@@ -2,7 +2,7 @@
 
 namespace Juno.Test
 {
-    public class Test_Inject : MonoBehaviour
+    public sealed class Test_Inject : MonoBehaviour
     {
         [Inject]
         private void OnInject( string str )
