@@ -2,7 +2,7 @@
 
 namespace Juno.Test
 {
-    public class Test_Installer : MonoBehaviourInstaller
+    public sealed class Test_Installer : MonoBehaviourInstaller
     {
         public override void InstallBindings( DIContainer container )
         {

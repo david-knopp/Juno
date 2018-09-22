@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Juno
 {
-    public class SceneContext : ContextBase
+    public sealed class SceneContext : ContextBase
     {
         #region protected
         protected override void OnAwake()
@@ -20,6 +20,15 @@ namespace Juno
         #endregion // protected
 
         #region private
+        private void OnEnable()
+        {
+            // TODO: register this scene's context somewhere
+        }
+
+        private void OnDisable()
+        {
+        }
+
         private void QueueSceneObjectsForInject()
         {
             List<MonoBehaviour> behaviors = InjectUtils.GetInjectableMonoBehaviours( gameObject.scene );
