@@ -5,9 +5,9 @@ namespace Juno.Test
     public class Test_Inject : MonoBehaviour
     {
         [Inject]
-        private void Inject()
+        private void OnInject( string str )
         {
-            Debug.Log( "Inject" );
+            Debug.LogFormat( "OnInject: '{0}'", str );
         }
     }
 }

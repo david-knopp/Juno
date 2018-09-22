@@ -55,10 +55,6 @@ namespace Juno
                 instance = ( T )objInstance;
                 return true;
             }
-            else if ( Parent != null )
-            {
-                return Parent.TryGet( out instance, id );
-            }
 
             instance = default( T );
             return false;
@@ -67,7 +63,17 @@ namespace Juno
         public bool TryGet( Type type, out object instance, int id = c_defaultID )
         {
             var bindings = GetBindingsForType( type );
-            return bindings.TryGetValue( id, out instance );
+            
+            if ( bindings.TryGetValue( id, out instance ) )
+            {
+                return true;
+            }
+            else if ( Parent != null )
+            {
+                return Parent.TryGet( type, out instance, id );
+            }
+
+            return false;
         }
 
         public T Get<T>( int id = c_defaultID )
