@@ -21,7 +21,7 @@ namespace Juno
         protected override void OnAwake()
         {
             base.OnAwake();
-            Container.Parent = ProjectContext.Instance.Container;
+            Container.Parent = ProjectContext.Instance.GetContainer();
         }
 
         protected override void OnPreInject()

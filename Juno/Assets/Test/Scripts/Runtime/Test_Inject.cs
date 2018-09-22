@@ -7,7 +7,7 @@ namespace Juno.Test
         [Inject]
         private void OnInject( string str )
         {
-            Debug.LogFormat( "OnInject: '{0}'", str );
+            Debug.LogFormat( "{0}.OnInject: '{1}'", name, str );
         }
     }
 }
