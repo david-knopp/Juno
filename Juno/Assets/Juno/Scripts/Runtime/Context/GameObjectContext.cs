@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Juno
 {
-    public class GameObjectContext : ContextBase
+    public sealed class GameObjectContext : ContextBase
     {
         #region public
         public override DIContainer GetContainer()
