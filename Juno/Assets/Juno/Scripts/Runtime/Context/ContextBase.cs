@@ -58,6 +58,7 @@ namespace Juno
         private void Awake()
         {
             Container = new DIContainer();
+            Container.Bind( Container );
 
             // run installers
             InstallBindings( m_monoBehaviourInstallers );
