@@ -1,0 +1,12 @@
+{
+    "name": "Juno.Editor",
+    "references": [
+        "Runtime"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false
+}
