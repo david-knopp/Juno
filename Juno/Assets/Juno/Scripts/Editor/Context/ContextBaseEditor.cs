@@ -38,7 +38,7 @@ namespace Juno
             list.drawElementCallback = ( Rect rect, int index, bool isActive, bool isFocused ) =>
             {
                 EditorGUI.indentLevel++;
-                EditorGUI.PropertyField( rect, prop.GetArrayElementAtIndex( index ), true );
+                EditorGUI.PropertyField( rect, prop.GetArrayElementAtIndex( index ), new GUIContent(), true );
                 EditorGUI.indentLevel--;
             };
 
