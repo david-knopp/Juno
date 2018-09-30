@@ -2,7 +2,7 @@
 
 namespace Juno
 {
-    public class Factory
+    public sealed class Factory
     {
         #region public
         public T Create<T>()
