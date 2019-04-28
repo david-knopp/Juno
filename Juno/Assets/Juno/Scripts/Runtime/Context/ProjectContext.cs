@@ -42,7 +42,7 @@ namespace Juno
                 return m_instance;
             }
         }
-        #endregion // public
+        #endregion public
 
         #region protected
         protected override void OnAwake()
@@ -61,7 +61,7 @@ namespace Juno
 
             DontDestroyOnLoad( gameObject );
         }
-        #endregion // protected
+        #endregion protected
 
         #region private
         private const string c_resourceName = "ProjectContext";
@@ -73,6 +73,6 @@ namespace Juno
             // catch if app is quitting to prevent allocation on exit
             m_isApplicationQuitting = true;
         }
-        #endregion // private
+        #endregion private
     }
 }

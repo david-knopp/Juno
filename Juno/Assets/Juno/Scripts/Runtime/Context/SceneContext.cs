@@ -15,7 +15,7 @@ namespace Juno
         {
             return s_sceneContexts.TryGetValue( scenePath, out sceneContext );
         }
-        #endregion // public
+        #endregion public
 
         #region protected
         protected override void OnAwake()
@@ -29,7 +29,7 @@ namespace Juno
             base.OnPreInject();
             QueueSceneObjectsForInject();
         }
-        #endregion // protected
+        #endregion protected
 
         #region private
         private static Dictionary<string, SceneContext> s_sceneContexts;
@@ -52,6 +52,6 @@ namespace Juno
                 Container.QueueForInject( behavior );
             }
         }
-        #endregion // private
+        #endregion private
     }
 }
