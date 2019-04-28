@@ -11,7 +11,7 @@ namespace Juno
             ConnectParent();
             return base.GetContainer();
         }
-        #endregion // public
+        #endregion public
 
         #region protected
         protected override void OnPreInject()
@@ -20,7 +20,7 @@ namespace Juno
             ConnectParent();
             QueueChildrenAndSelfForInject();
         }
-        #endregion // protected
+        #endregion protected
 
         #region private
         private void QueueChildrenAndSelfForInject()
@@ -64,6 +64,6 @@ namespace Juno
                 }
             }
         }
-        #endregion // private
+        #endregion private
     }
 }

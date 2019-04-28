@@ -10,7 +10,7 @@ namespace Juno
         {
             return Container;
         }
-        #endregion // public
+        #endregion public
 
         #region protected
         protected DIContainer Container
@@ -49,7 +49,7 @@ namespace Juno
                 } 
             }
         }
-        #endregion // protected
+        #endregion protected
 
         #region private
         [SerializeField] private List<MonoBehaviourInstaller> m_monoBehaviourInstallers;
@@ -75,6 +75,6 @@ namespace Juno
 
             OnStart();
         }
-        #endregion // private
+        #endregion private
     }
 }

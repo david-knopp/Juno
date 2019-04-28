@@ -92,7 +92,7 @@ namespace Juno
             Dictionary<int, object> namedBindings = GetBindingsForType( typeof( T ) );
             return namedBindings.Values.Cast<T>().ToList();
         }
-        #endregion // binding
+        #endregion binding
 
         #region injection
         public void Inject( object obj )
@@ -149,8 +149,8 @@ namespace Juno
         {
             m_injectQueue.Add( obj );
         }
-        #endregion // injection
-        #endregion // public
+        #endregion injection
+        #endregion public
 
         #region private
         private Dictionary<Type, Dictionary<int, object>> m_bindings;
@@ -167,6 +167,6 @@ namespace Juno
 
             return typeBindings;
         }
-        #endregion // private
+        #endregion private
     }
 }
