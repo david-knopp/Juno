@@ -62,92 +62,50 @@ namespace Juno
 
             return obj;
         }
-        #endregion // GameObject
+        #endregion GameObject
 
         #region MonoBehaviour
-        public MonoBehaviour Clone( MonoBehaviour original )
-        {
-            MonoBehaviour behaviorObj = Object.Instantiate( original );
-            InjectGameObject( behaviorObj.gameObject );
-
-            return behaviorObj;
-        }
-
-        public MonoBehaviour Clone( MonoBehaviour original, Transform parent )
-        {
-            MonoBehaviour behaviorObj = Object.Instantiate( original, parent );
-            InjectGameObject( behaviorObj.gameObject );
-
-            return behaviorObj;
-        }
-
-        public MonoBehaviour Clone( MonoBehaviour original, Transform parent, bool worldPositionStays )
-        {
-            MonoBehaviour behaviorObj = Object.Instantiate( original, parent, worldPositionStays );
-            InjectGameObject( behaviorObj.gameObject );
-
-            return behaviorObj;
-        }
-        
-        public MonoBehaviour Clone( MonoBehaviour original, Vector3 position, Quaternion rotation )
-        {
-            MonoBehaviour behaviorObj = Object.Instantiate( original, position, rotation );
-            InjectGameObject( behaviorObj.gameObject );
-
-            return behaviorObj;
-        }
-
-        public MonoBehaviour Clone( MonoBehaviour original, Vector3 position, Quaternion rotation, Transform parent )
-        {
-            MonoBehaviour behaviorObj = Object.Instantiate( original, position, rotation, parent );
-            InjectGameObject( behaviorObj.gameObject );
-
-            return behaviorObj;
-        }
-        #endregion // MonoBehaviour
-
-        #region Object
-        public T Clone<T>( T original ) where T : Object
+        public T Clone<T>( T original ) where T : MonoBehaviour
         {
             T obj = Object.Instantiate( original );
-            m_container.Inject( obj );
+            m_container.Inject( obj.gameObject );
 
             return obj;
         }
 
-        public T Clone<T>( T original, Transform parent ) where T : Object
+        public T Clone<T>( T original, Transform parent ) where T : MonoBehaviour
         {
             T obj = Object.Instantiate( original, parent );
-            m_container.Inject( obj );
+            m_container.Inject( obj.gameObject );
 
             return obj;
         }
 
-        public T Clone<T>( T original, Transform parent, bool worldPositionStays ) where T : Object
+        public T Clone<T>( T original, Transform parent, bool worldPositionStays ) where T : MonoBehaviour
         {
             T obj = Object.Instantiate( original, parent, worldPositionStays );
-            m_container.Inject( obj );
+            m_container.Inject( obj.gameObject );
 
             return obj;
         }
 
-        public T Clone<T>( T original, Vector3 position, Quaternion rotation ) where T : Object
+        public T Clone<T>( T original, Vector3 position, Quaternion rotation ) where T : MonoBehaviour
         {
             T obj = Object.Instantiate( original, position, rotation );
-            m_container.Inject( obj );
+            m_container.Inject( obj.gameObject );
 
             return obj;
         }
 
-        public T Clone<T>( T original, Vector3 position, Quaternion rotation, Transform parent ) where T : Object
+        public T Clone<T>( T original, Vector3 position, Quaternion rotation, Transform parent ) where T : MonoBehaviour
         {
             T obj = Object.Instantiate( original, position, rotation, parent );
-            m_container.Inject( obj );
+            m_container.Inject( obj.gameObject );
 
             return obj;
-        } 
-        #endregion // Object
-        #endregion // public
+        }
+        #endregion MonoBehaviour
+        #endregion public
 
         #region private
         private DIContainer m_container;
@@ -168,6 +126,6 @@ namespace Juno
 
             m_container.FlushInjectQueue();
         }
-        #endregion // private
+        #endregion private
     }
 }
