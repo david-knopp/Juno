@@ -1,19 +1,22 @@
 ﻿using System;
+using System.Reflection;
 
 namespace Juno
 {
-    internal struct ParamInjectInfo
+    internal struct FieldInjectInfo
     {
-        public ParamInjectInfo( Type type, int? id, bool isOptional )
+        public FieldInjectInfo( Type type, FieldInfo fieldInfo, int? id, bool isOptional )
         {
             Type = type;
+            FieldInfo = fieldInfo;
             ID = id;
             IsOptional = isOptional;
         }
 
-        public ParamInjectInfo( Type type, bool isOptional )
+        public FieldInjectInfo( Type type, FieldInfo fieldInfo, bool isOptional )
         {
             Type = type;
+            FieldInfo = fieldInfo;
             ID = null;
             IsOptional = isOptional;
         }
@@ -32,7 +35,17 @@ namespace Juno
 
         public bool IsAnonymous
         {
-            get { return ID.HasValue == false; }
+            get
+            {
+                return ID.HasValue == false;
+            }
+        }
+
+        public FieldInfo FieldInfo
+        {
+
+            get;
+            private set;
         }
 
         public bool IsOptional

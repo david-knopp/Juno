@@ -99,40 +99,13 @@ namespace Juno
         {
             if ( obj != null )
             {
+                // get info
                 Type objType = obj.GetType();
                 TypeInjectInfo typeInfo = TypeAnalyzer.GetTypeInjectInfo( objType );
 
-                // inject methods
-                foreach ( MethodInjectInfo methodInjectInfo in typeInfo.MethodInfo )
-                {
-                    // get desired arguments to inject
-                    List<object> methodArguments = new List<object>();
-
-                    foreach ( ParamInjectInfo paramInjectInfo in methodInjectInfo.ParamInfo )
-                    {
-                        object instance;
-                        int id = ( paramInjectInfo.ID.HasValue == false )? c_defaultID : paramInjectInfo.ID.Value;
-
-                        if ( TryGet( paramInjectInfo.Type, out instance, id ) )
-                        {
-                            methodArguments.Add( instance );
-                        }
-                        else
-                        {
-                            if ( paramInjectInfo.IsOptional == false )
-                            {
-                                throw new InvalidOperationException( string.Format( "No binding of type '{0}' with ID '{1}' exists for attempted injection '{2}'",
-                                                                                    paramInjectInfo.Type,
-                                                                                    id,
-                                                                                    methodInjectInfo.MethodInfo.Name ) );
-                            }
-
-                            methodArguments.Add( null );
-                        }
-                    }
-
-                    methodInjectInfo.MethodInfo.Invoke( obj, methodArguments.ToArray() );
-                }
+                // inject
+                InjectMethods( obj, typeInfo );
+                InjectFields( obj, typeInfo );
             }
         }
 
@@ -166,6 +139,64 @@ namespace Juno
             }
 
             return typeBindings;
+        }
+
+        private void InjectMethods( object obj, in TypeInjectInfo typeInfo )
+        {
+            foreach ( MethodInjectInfo methodInjectInfo in typeInfo.MethodInfo )
+            {
+                // get desired arguments to inject
+                List<object> methodArguments = new List<object>();
+
+                foreach ( ParamInjectInfo paramInjectInfo in methodInjectInfo.ParamInfo )
+                {
+                    object instance;
+                    int id = paramInjectInfo.IsAnonymous ? c_defaultID : paramInjectInfo.ID.Value;
+
+                    if ( TryGet( paramInjectInfo.Type, out instance, id ) )
+                    {
+                        methodArguments.Add( instance );
+                    }
+                    else
+                    {
+                        if ( paramInjectInfo.IsOptional == false )
+                        {
+                            throw new InvalidOperationException( string.Format( "No binding of type '{0}' with ID '{1}' exists for attempted method injection '{2}'",
+                                                                                paramInjectInfo.Type,
+                                                                                id,
+                                                                                methodInjectInfo.MethodInfo.Name ) );
+                        }
+
+                        methodArguments.Add( null );
+                    }
+                }
+
+                methodInjectInfo.MethodInfo.Invoke( obj, methodArguments.ToArray() );
+            }
+        }
+
+        private void InjectFields( object obj, in TypeInjectInfo typeInfo )
+        {
+            foreach ( FieldInjectInfo fieldInjectInfo in typeInfo.FieldInfo )
+            {
+                object instance;
+                int id = fieldInjectInfo.IsAnonymous ? c_defaultID : fieldInjectInfo.ID.Value;
+
+                if ( TryGet( fieldInjectInfo.Type, out instance, id ) )
+                {
+                    fieldInjectInfo.FieldInfo.SetValue( obj, instance );
+                }
+                else
+                {
+                    if ( fieldInjectInfo.IsOptional == false )
+                    {
+                        throw new InvalidOperationException( string.Format( "No binding of type '{0}' with ID '{1}' exists for attempted member injection '{2}'",
+                                                             fieldInjectInfo.Type,
+                                                             id,
+                                                             fieldInjectInfo.FieldInfo.Name ) );
+                    }
+                }
+            }
         }
         #endregion private
     }
