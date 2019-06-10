@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using UnityEngine;
 
 namespace Juno
@@ -23,7 +24,7 @@ namespace Juno
                     if ( !m_instance )
                     {
                         // instantiate from prefab
-                        ProjectContext prefab = Resources.Load<ProjectContext>( c_resourceName );
+                        ProjectContext prefab = Resources.LoadAll<ProjectContext>( string.Empty ).FirstOrDefault();
                         if ( prefab )
                         {
                             m_instance = Instantiate( prefab );
