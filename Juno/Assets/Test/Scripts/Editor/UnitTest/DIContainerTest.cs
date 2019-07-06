@@ -1,6 +1,4 @@
-﻿using UnityEngine.TestTools;
-using NUnit.Framework;
-using System;
+﻿using NUnit.Framework;
 
 namespace Juno.Test
 {
@@ -109,8 +107,8 @@ namespace Juno.Test
             Assert.IsTrue( bindings.Count == 2 );
         }
 
-                [Test]
-        public void Get_Multiple_WithID([Range( -10000, 10000, 1000 )] int id)
+        [Test]
+        public void Get_Multiple_WithID( [Range( -10000, 10000, 1000 )] int id )
         {
             TestClass testObj1 = new TestClass() { m_id = "Test1" };
             TestClass testObj2 = new TestClass() { m_id = "Test2" };
@@ -119,7 +117,21 @@ namespace Juno.Test
             container.Bind( testObj1, id );
             container.Bind( testObj2, id );
 
-            var bindings = container.GetAll<TestClass>( id );
+            var bindings = container.GetAll<TestClass>();
+            Assert.IsTrue( bindings.Count == 2 );
+        }
+        
+        [Test]
+        public void Get_Multiple_WithVaryingIDs( [Range( -10000, 10000, 1000 )] int initialID )
+        {
+            TestClass testObj1 = new TestClass() { m_id = "Test1" };
+            TestClass testObj2 = new TestClass() { m_id = "Test2" };
+            DIContainer container = new DIContainer();
+
+            container.Bind( testObj1, initialID++ );
+            container.Bind( testObj2, initialID );
+
+            var bindings = container.GetAll<TestClass>();
             Assert.IsTrue( bindings.Count == 2 );
         }
         #endregion Get
