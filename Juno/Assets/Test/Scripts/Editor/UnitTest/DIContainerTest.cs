@@ -72,7 +72,7 @@ namespace Juno.Test
             container.Bind<TestClass>( id );
             container.Bind<TestClass>( id + 1 );
         }
-        #endregion // Bind
+        #endregion Bind
 
         #region Get
         [Test]
@@ -94,7 +94,35 @@ namespace Juno.Test
             container.Bind( testObj, id );
             Assert.AreEqual( testObj, container.Get<TestClass>( id ) );
         }
-        #endregion // Get
+
+        [Test]
+        public void Get_Multiple_Anonymous()
+        {
+            TestClass testObj1 = new TestClass() { m_id = "Test1" };
+            TestClass testObj2 = new TestClass() { m_id = "Test2" };
+            DIContainer container = new DIContainer();
+
+            container.Bind( testObj1 );
+            container.Bind( testObj2 );
+
+            var bindings = container.GetAll<TestClass>();
+            Assert.IsTrue( bindings.Count == 2 );
+        }
+
+                [Test]
+        public void Get_Multiple_WithID([Range( -10000, 10000, 1000 )] int id)
+        {
+            TestClass testObj1 = new TestClass() { m_id = "Test1" };
+            TestClass testObj2 = new TestClass() { m_id = "Test2" };
+            DIContainer container = new DIContainer();
+
+            container.Bind( testObj1, id );
+            container.Bind( testObj2, id );
+
+            var bindings = container.GetAll<TestClass>( id );
+            Assert.IsTrue( bindings.Count == 2 );
+        }
+        #endregion Get
 
         #region Injection
         private class InjectTestClassA
@@ -223,6 +251,6 @@ namespace Juno.Test
             Assert.AreEqual( testClass.Value1, value1 );
             Assert.AreEqual( testClass.Value2, value2 );
         }
-        #endregion // Injection
+        #endregion Injection
     }
 }
