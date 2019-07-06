@@ -11,7 +11,7 @@ namespace Juno
 
         public DIContainer()
         {
-            m_bindings = new Dictionary<Type, Dictionary<int, object>>();
+            m_bindings = new Dictionary<Type, Dictionary<int, List<object>>>();
             m_injectQueue = new HashSet<object>();
         }
 
@@ -36,15 +36,32 @@ namespace Juno
 
         public void Bind( Type type, object instance, int id = c_defaultID )
         {
-            var typeBindings = GetBindingsForType( type );
-            typeBindings.Add( id, instance );
+            Dictionary<int, List<object>> typeBindings;
+            if ( m_bindings.TryGetValue( type, out typeBindings ) == false )
+            {
+                typeBindings = new Dictionary<int, List<object>>();
+                m_bindings.Add( type, typeBindings );
+            }
+
+            List<object> bindings;
+            if ( typeBindings.TryGetValue( id, out bindings ) == false )
+            {
+                bindings = new List<object>();
+                typeBindings.Add( id, bindings );
+            }
+
+            bindings.Add( instance );
+
             QueueForInject( instance );
         }
 
         public void Unbind<T>( int id = c_defaultID )
-        {
-            var bindings = GetBindingsForType( typeof( T ) );
-            bindings.Remove( id );
+        {            
+            Dictionary<int, List<object>> typeBindings;
+            if ( m_bindings.TryGetValue( typeof( T ), out typeBindings ) )
+            {
+                typeBindings.Remove( id );
+            }
         }
 
         public bool TryGet<T>( out T instance, int id = c_defaultID )
@@ -62,35 +79,58 @@ namespace Juno
 
         public bool TryGet( Type type, out object instance, int id = c_defaultID )
         {
-            var bindings = GetBindingsForType( type );
-            
-            if ( bindings.TryGetValue( id, out instance ) )
+            Dictionary<int, List<object>> typeBindings;
+            if ( m_bindings.TryGetValue( type, out typeBindings ) )
             {
-                return true;
+                List<object> bindings;
+                if ( typeBindings.TryGetValue( id, out bindings ) &&
+                     bindings.Count > 0 )
+                {
+                    instance = bindings.First();
+                    return true;
+                }
             }
-            else if ( Parent != null )
+
+            // try parent
+            if ( Parent != null )
             {
                 return Parent.TryGet( type, out instance, id );
             }
 
+            instance = null;
             return false;
         }
 
         public T Get<T>( int id = c_defaultID )
-        {
+        {            
             T instance;
-            if ( TryGet( out instance, id ) )
+            if ( TryGet<T>( out instance, id ) )
             {
                 return instance;
             }
 
-            throw new KeyNotFoundException( string.Format( "No bindings exist for type '{0}' with id '{1}'", typeof( T ).FullName, id ) );
+            throw new KeyNotFoundException( $"No bindings exist for type '{typeof( T ).FullName}' with id '{id}'" );
         }
 
-        public List<T> GetAll<T>()
+        public List<T> GetAll<T>( int id = c_defaultID )
         {
-            Dictionary<int, object> namedBindings = GetBindingsForType( typeof( T ) );
-            return namedBindings.Values.Cast<T>().ToList();
+            var bindings = GetAll( typeof( T ), id );
+            return bindings.Cast<T>().ToList();
+        }
+
+        public List<object> GetAll( Type type, int id = c_defaultID )
+        {
+            Dictionary<int, List<object>> typeBindings;
+            if ( m_bindings.TryGetValue( type, out typeBindings ) )
+            {
+                List<object> bindings;
+                if ( typeBindings.TryGetValue( id, out bindings ) )
+                {
+                    return bindings;
+                }
+            }
+            
+            throw new KeyNotFoundException( $"No bindings exist for type '{type.FullName}' with id '{id}'" );
         }
         #endregion binding
 
@@ -126,20 +166,8 @@ namespace Juno
         #endregion public
 
         #region private
-        private Dictionary<Type, Dictionary<int, object>> m_bindings;
+        private Dictionary<Type, Dictionary<int, List<object>>> m_bindings;
         private HashSet<object> m_injectQueue;
-
-        private Dictionary<int, object> GetBindingsForType( Type type )
-        {
-            Dictionary<int, object> typeBindings;
-            if ( m_bindings.TryGetValue( type, out typeBindings ) == false )
-            {
-                typeBindings = new Dictionary<int, object>();
-                m_bindings.Add( type, typeBindings );
-            }
-
-            return typeBindings;
-        }
 
         private void InjectMethods( object obj, in TypeInjectInfo typeInfo )
         {

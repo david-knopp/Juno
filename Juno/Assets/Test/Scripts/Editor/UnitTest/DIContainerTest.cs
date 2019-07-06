@@ -54,8 +54,7 @@ namespace Juno.Test
         {
             DIContainer container = new DIContainer();
             container.Bind<TestClass>();
-
-            Assert.Throws<ArgumentException>( () => container.Bind<TestClass>() );
+            container.Bind<TestClass>();
         }
 
         [Test]
@@ -63,8 +62,7 @@ namespace Juno.Test
         {
             DIContainer container = new DIContainer();
             container.Bind<TestClass>( id );
-
-            Assert.Throws<ArgumentException>( () => container.Bind<TestClass>( id ) );
+            container.Bind<TestClass>( id );
         }
 
         [Test]
