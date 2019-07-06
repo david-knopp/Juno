@@ -112,25 +112,21 @@ namespace Juno
             throw new KeyNotFoundException( $"No bindings exist for type '{typeof( T ).FullName}' with id '{id}'" );
         }
 
-        public List<T> GetAll<T>( int id = c_defaultID )
+        public List<T> GetAll<T>()
         {
-            var bindings = GetAll( typeof( T ), id );
+            var bindings = GetAll( typeof( T ) );
             return bindings.Cast<T>().ToList();
         }
 
-        public List<object> GetAll( Type type, int id = c_defaultID )
+        public List<object> GetAll( Type type )
         {
             Dictionary<int, List<object>> typeBindings;
             if ( m_bindings.TryGetValue( type, out typeBindings ) )
             {
-                List<object> bindings;
-                if ( typeBindings.TryGetValue( id, out bindings ) )
-                {
-                    return bindings;
-                }
+                return typeBindings.Values.SelectMany( x => x ).ToList();
             }
             
-            throw new KeyNotFoundException( $"No bindings exist for type '{type.FullName}' with id '{id}'" );
+            throw new KeyNotFoundException( $"No bindings exist for type '{type.FullName}'" );
         }
         #endregion binding
 
