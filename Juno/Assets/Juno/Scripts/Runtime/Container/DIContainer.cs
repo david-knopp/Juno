@@ -56,6 +56,31 @@ namespace Juno
             QueueForInject( instance );
         }
 
+        public void BindWithInterfaces<T>( int id = c_defaultID )
+        {
+            Type type = typeof( T );
+            object instance = Activator.CreateInstance( type );
+            BindWithInterfaces( type, instance, id );
+        }
+
+        public void BindWithInterfaces  <T>( T instance, int id = c_defaultID )
+        {
+            BindWithInterfaces( typeof( T ), instance, id );
+        }
+
+        public void BindWithInterfaces( Type type, object instance, int id = c_defaultID )
+        {
+            // bind concrete type
+            Bind( type, instance, id );
+
+            // bind interfaces
+            Type[] interfaceTypes = type.GetInterfaces();
+            foreach ( var interfaceType in interfaceTypes )
+            {
+                Bind( interfaceType, instance, id );
+            }
+        }
+
         public void Unbind<T>( int id = c_defaultID )
         {            
             Dictionary<int, List<object>> typeBindings;
