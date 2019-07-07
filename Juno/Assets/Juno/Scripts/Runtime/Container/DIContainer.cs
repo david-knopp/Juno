@@ -116,7 +116,7 @@ namespace Juno
         public bool TryGetAll<T>( out List<T> instances )
         {
             List<object> objects;
-            if ( TryGetAll( out objects ) )
+            if ( TryGetAll( typeof( T ), out objects ) )
             {
                 instances = objects.Cast<T>().ToList();
                 return true;
