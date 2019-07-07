@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -112,6 +113,55 @@ namespace Juno
             throw new KeyNotFoundException( $"No bindings exist for type '{typeof( T ).FullName}' with id '{id}'" );
         }
 
+        public bool TryGetAll<T>( out List<T> instances )
+        {
+            List<object> objects;
+            if ( TryGetAll( out objects ) )
+            {
+                instances = objects.Cast<T>().ToList();
+                return true;
+            }
+
+            instances = null;
+            return false;
+        }
+
+        public bool TryGetAll( Type type, out List<object> instances )
+        {
+            Dictionary<int, List<object>> typeBindings;
+            if ( m_bindings.TryGetValue( type, out typeBindings ) )
+            {
+                instances = typeBindings.Values.SelectMany( x => x ).ToList();
+                return true;
+            }
+
+            instances = null;
+            return false;
+        }
+
+        public bool TryGetAll( Type type, out IList instances )
+        {
+            Dictionary<int, List<object>> typeBindings;
+            if ( m_bindings.TryGetValue( type, out typeBindings ) )
+            {
+                var genericType = typeof( List<> ).MakeGenericType( type );
+                instances = ( IList )Activator.CreateInstance( genericType );
+
+                foreach ( var bindings in typeBindings )
+                {
+                    foreach ( var instance in bindings.Value )
+                    {
+                        instances.Add( instance );
+                    }
+                }
+
+                return true;
+            }
+
+            instances = null;
+            return false;
+        }
+
         public List<T> GetAll<T>()
         {
             var bindings = GetAll( typeof( T ) );
@@ -120,10 +170,10 @@ namespace Juno
 
         public List<object> GetAll( Type type )
         {
-            Dictionary<int, List<object>> typeBindings;
-            if ( m_bindings.TryGetValue( type, out typeBindings ) )
+            List<object> bindings;
+            if ( TryGetAll( type, out bindings ) )
             {
-                return typeBindings.Values.SelectMany( x => x ).ToList();
+                return bindings;
             }
             
             throw new KeyNotFoundException( $"No bindings exist for type '{type.FullName}'" );
@@ -175,24 +225,29 @@ namespace Juno
                 foreach ( ParamInjectInfo paramInjectInfo in methodInjectInfo.ParamInfo )
                 {
                     object instance;
+                    var paramType = paramInjectInfo.Type;
                     int id = paramInjectInfo.IsAnonymous ? c_defaultID : paramInjectInfo.ID.Value;
 
-                    if ( TryGet( paramInjectInfo.Type, out instance, id ) )
+                    // get instance to inject
+                    if ( TryGet( paramType, out instance, id ) == false )
                     {
-                        methodArguments.Add( instance );
-                    }
-                    else
-                    {
-                        if ( paramInjectInfo.IsOptional == false )
+                        IList instanceList;
+                        Type genericTypeArg = paramType.GenericTypeArguments.First();
+                        
+                        // check if requested type is a generic list, and try to inject all bindings of type
+                        if ( IsCandidateForGetAll( paramType ) &&
+                             TryGetAll( paramType.GenericTypeArguments.First(), out instanceList ) )
                         {
-                            throw new InvalidOperationException( string.Format( "No binding of type '{0}' with ID '{1}' exists for attempted method injection '{2}'",
-                                                                                paramInjectInfo.Type,
-                                                                                id,
-                                                                                methodInjectInfo.MethodInfo.Name ) );
+                            instance = instanceList;
                         }
-
-                        methodArguments.Add( null );
+                        // check if parameter is optional
+                        else if ( paramInjectInfo.IsOptional == false )
+                        {
+                            throw new InvalidOperationException( $"No binding of type '{paramType}' with ID '{id}' exists for attempted method injection '{methodInjectInfo.MethodInfo.Name}'" );
+                        }
                     }
+
+                    methodArguments.Add( instance );
                 }
 
                 methodInjectInfo.MethodInfo.Invoke( obj, methodArguments.ToArray() );
@@ -205,22 +260,35 @@ namespace Juno
             {
                 object instance;
                 int id = fieldInjectInfo.IsAnonymous ? c_defaultID : fieldInjectInfo.ID.Value;
+                Type fieldType = fieldInjectInfo.Type;
 
-                if ( TryGet( fieldInjectInfo.Type, out instance, id ) )
+                if ( TryGet( fieldType, out instance, id ) == false )
                 {
-                    fieldInjectInfo.FieldInfo.SetValue( obj, instance );
-                }
-                else
-                {
-                    if ( fieldInjectInfo.IsOptional == false )
+                    IList instanceList;
+                    Type genericTypeArg = fieldType.GenericTypeArguments.First();
+
+                    if ( IsCandidateForGetAll( fieldType ) &&
+                         TryGetAll( genericTypeArg, out instanceList ) )
                     {
-                        throw new InvalidOperationException( string.Format( "No binding of type '{0}' with ID '{1}' exists for attempted member injection '{2}'",
-                                                             fieldInjectInfo.Type,
-                                                             id,
-                                                             fieldInjectInfo.FieldInfo.Name ) );
+                        instance = instanceList;
+                    }
+                    else if ( fieldInjectInfo.IsOptional == false )
+                    {
+                        throw new InvalidOperationException( $"No binding of type '{fieldType}' with ID '{id}' exists for attempted member injection '{fieldInjectInfo.FieldInfo.Name}'" );
                     }
                 }
+
+                fieldInjectInfo.FieldInfo.SetValue( obj, instance );
             }
+        }
+
+        private static bool IsCandidateForGetAll( Type type )
+        {
+            return type.IsGenericType &&
+                    ( type.GetGenericTypeDefinition() == typeof( List<> ) ||
+                      type.GetGenericTypeDefinition() == typeof( IList<> ) ||
+                      type.GetGenericTypeDefinition() == typeof( IReadOnlyList<> ) ||
+                      type.GetGenericTypeDefinition() == typeof( IEnumerable<> ) );
         }
         #endregion private
     }

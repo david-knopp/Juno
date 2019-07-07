@@ -1,4 +1,6 @@
 ﻿using NUnit.Framework;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Juno.Test
 {
@@ -137,22 +139,13 @@ namespace Juno.Test
         #endregion Get
 
         #region Injection
-        private class InjectTestClassA
+        private class FieldInjectTestClass
         {
-            public string ID
-            {
-                get;
-                private set;
-            }
-
-            [Inject]
-            private void Inject( string id )
-            {
-                ID = id;
-            }
+            [Inject( ID = 1 )] public string Value1;
+            [Inject( ID = 2 )] public string Value2;
         }
 
-        private class InjectTestClassB
+        private class MethodInjectTestClass
         {
             public string Value1
             {
@@ -175,51 +168,110 @@ namespace Juno.Test
             }
         }
 
+        private class FieldInjectTestClassGeneric<T>
+        {
+            [Inject] public T Value;
+        }
+
+        private class MethodInjectTestClassGeneric<T>
+        {
+            public T Value
+            {
+                get;
+                private set;
+            }
+
+            [Inject] 
+            private void Inject( T value )
+            {
+                Value = value;
+            }
+        }
+
         [Test]
-        public void Inject_SingleViaBind( [Values( "TestID" )] string id )
+        public void Inject_Method_SingleViaBind( [Values( "TestID" )] string id )
         {
             DIContainer container = new DIContainer();
-            InjectTestClassA testClass = new InjectTestClassA();
+            var testClass = new MethodInjectTestClassGeneric<string>();
 
             container.Bind( id );
             container.Bind( testClass );
 
             container.FlushInjectQueue();
 
-            Assert.AreEqual( testClass.ID, id );
+            Assert.AreEqual( testClass.Value, id );
         }
 
         [Test]
-        public void Inject_SingleViaManualInject( [Values( "TestID" )] string id )
+        public void Inject_Field_SingleViaBind( [Values( "TestID" )] string id )
         {
             DIContainer container = new DIContainer();
-            InjectTestClassA testClass = new InjectTestClassA();
+            var testClass = new FieldInjectTestClassGeneric<string>();
+
+            container.Bind( id );
+            container.Bind( testClass );
+
+            container.FlushInjectQueue();
+
+            Assert.AreEqual( testClass.Value, id );
+        }
+
+        [Test]
+        public void Inject_Method_SingleViaManualInject( [Values( "TestID" )] string id )
+        {
+            DIContainer container = new DIContainer();
+            var testClass = new MethodInjectTestClassGeneric<string>();
 
             container.Bind( id );
             container.Inject( testClass );
 
-            Assert.AreEqual( testClass.ID, id );
+            Assert.AreEqual( testClass.Value, id );
         }
 
         [Test]
-        public void Inject_SingleViaInjectQueue( [Values( "TestID" )] string id )
+        public void Inject_Field_SingleViaManualInject( [Values( "TestID" )] string id )
         {
             DIContainer container = new DIContainer();
-            InjectTestClassA testClass = new InjectTestClassA();
+            var testClass = new FieldInjectTestClassGeneric<string>();
+
+            container.Bind( id );
+            container.Inject( testClass );
+
+            Assert.AreEqual( testClass.Value, id );
+        }
+
+        [Test]
+        public void Inject_Method_SingleViaInjectQueue( [Values( "TestID" )] string id )
+        {
+            DIContainer container = new DIContainer();
+            var testClass = new MethodInjectTestClassGeneric<string>();
 
             container.Bind( id );
             container.QueueForInject( testClass );
             container.FlushInjectQueue();
 
-            Assert.AreEqual( testClass.ID, id );
+            Assert.AreEqual( testClass.Value, id );
         }
 
         [Test]
-        public void Inject_MultipleViaBind( [Values( "Value1" )] string value1,
-                                            [Values( "Value2" )] string value2 )
+        public void Inject_Field_SingleViaInjectQueue( [Values( "TestID" )] string id )
         {
             DIContainer container = new DIContainer();
-            InjectTestClassB testClass = new InjectTestClassB();
+            var testClass = new FieldInjectTestClassGeneric<string>();
+
+            container.Bind( id );
+            container.QueueForInject( testClass );
+            container.FlushInjectQueue();
+
+            Assert.AreEqual( testClass.Value, id );
+        }
+
+        [Test]
+        public void Inject_Method_MultipleViaBind( [Values( "Value1" )] string value1,
+                                                   [Values( "Value2" )] string value2 )
+        {
+            DIContainer container = new DIContainer();
+            MethodInjectTestClass testClass = new MethodInjectTestClass();
 
             container.Bind( value1, 1 );
             container.Bind( value2, 2 );
@@ -232,11 +284,28 @@ namespace Juno.Test
         }
 
         [Test]
-        public void Inject_MultipleViaManualInject( [Values( "Value1" )] string value1,
-                                                    [Values( "Value2" )] string value2 )
+        public void Inject_Field_MultipleViaBind( [Values( "Value1" )] string value1,
+                                                  [Values( "Value2" )] string value2 )
         {
             DIContainer container = new DIContainer();
-            InjectTestClassB testClass = new InjectTestClassB();
+            var testClass = new FieldInjectTestClass();
+
+            container.Bind( value1, 1 );
+            container.Bind( value2, 2 );
+            container.Bind( testClass );
+
+            container.FlushInjectQueue();
+
+            Assert.AreEqual( testClass.Value1, value1 );
+            Assert.AreEqual( testClass.Value2, value2 );
+        }
+
+        [Test]
+        public void Inject_Method_MultipleViaManualInject( [Values( "Value1" )] string value1,
+                                                           [Values( "Value2" )] string value2 )
+        {
+            DIContainer container = new DIContainer();
+            MethodInjectTestClass testClass = new MethodInjectTestClass();
 
             container.Bind( value1, 1 );
             container.Bind( value2, 2 );
@@ -248,11 +317,27 @@ namespace Juno.Test
         }
 
         [Test]
-        public void Inject_MultipleViaInjectQueue( [Values( "Value1" )] string value1,
-                                                 [Values( "Value2" )] string value2 )
+        public void Inject_Field_MultipleViaManualInject( [Values( "Value1" )] string value1,
+                                                          [Values( "Value2" )] string value2 )
         {
             DIContainer container = new DIContainer();
-            InjectTestClassB testClass = new InjectTestClassB();
+            var testClass = new FieldInjectTestClass();
+
+            container.Bind( value1, 1 );
+            container.Bind( value2, 2 );
+
+            container.Inject( testClass );
+
+            Assert.AreEqual( testClass.Value1, value1 );
+            Assert.AreEqual( testClass.Value2, value2 );
+        }
+
+        [Test]
+        public void Inject_Method_MultipleViaInjectQueue( [Values( "Value1" )] string value1,
+                                                          [Values( "Value2" )] string value2 )
+        {
+            DIContainer container = new DIContainer();
+            MethodInjectTestClass testClass = new MethodInjectTestClass();
 
             container.Bind( value1, 1 );
             container.Bind( value2, 2 );
@@ -262,6 +347,109 @@ namespace Juno.Test
 
             Assert.AreEqual( testClass.Value1, value1 );
             Assert.AreEqual( testClass.Value2, value2 );
+        }
+
+        [Test, TestCase( 0, 1, 1, 2, 3, 5, 8 )]
+        public void Inject_Field_All_List( params int[] values )
+        {
+            DIContainer container = new DIContainer();
+            FieldInjectTestClassGeneric<List<int>> testClass = new FieldInjectTestClassGeneric<List<int>>();
+
+            foreach ( var value in values )
+            {
+                container.Bind( value );
+            }
+            
+            container.Inject( testClass );
+
+
+            Assert.AreEqual( testClass.Value.Count, values.Length );
+
+            testClass.Value.Sort();
+            for ( int i = 0; i < values.Length; i++ )
+            {
+                Assert.AreEqual( testClass.Value[i], values[i] );
+            }
+        }
+
+        [Test, TestCase( 0, 1, 1, 2, 3, 5, 8 )]
+        public void Inject_Field_All_IList( params int[] values )
+        {
+            DIContainer container = new DIContainer();
+            FieldInjectTestClassGeneric<IList<int>> testClass = new FieldInjectTestClassGeneric<IList<int>>();
+
+            foreach ( var value in values )
+            {
+                container.Bind( value );
+            }
+            
+            container.Inject( testClass );
+
+            Assert.AreEqual( testClass.Value.Count, values.Length );
+
+            for ( int i = 0; i < values.Length; i++ )
+            {
+                Assert.AreEqual( testClass.Value[i], values[i] );
+            }
+        }
+
+        [Test, TestCase( 0, 1, 1, 2, 3, 5, 8 )]
+        public void Inject_Field_All_Enumerable( params int[] values )
+        {
+            DIContainer container = new DIContainer();
+            FieldInjectTestClassGeneric<IEnumerable<int>> testClass = new FieldInjectTestClassGeneric<IEnumerable<int>>();
+
+            foreach ( var value in values )
+            {
+                container.Bind( value );
+            }
+            
+            container.Inject( testClass );
+
+            Assert.AreEqual( testClass.Value.Count(), values.Length );
+        }
+
+        [Test, TestCase( 0, 1, 1, 2, 3, 5, 8 )]
+        public void Inject_Field_All_IReadOnlyList( params int[] values )
+        {
+            DIContainer container = new DIContainer();
+            FieldInjectTestClassGeneric<IReadOnlyList<int>> testClass = new FieldInjectTestClassGeneric<IReadOnlyList<int>>();
+
+            foreach ( var value in values )
+            {
+                container.Bind( value );
+            }
+            
+            container.Inject( testClass );
+
+
+            Assert.AreEqual( testClass.Value.Count(), values.Length );
+
+            for ( int i = 0; i < values.Length; i++ )
+            {
+                Assert.AreEqual( testClass.Value[i], values[i] );
+            }
+        }
+
+        [Test, TestCase( 0, 1, 1, 2, 3, 5, 8 )]
+        public void Inject_Method_All_List( params int[] values )
+        {
+            DIContainer container = new DIContainer();
+            MethodInjectTestClassGeneric<List<int>> testClass = new MethodInjectTestClassGeneric<List<int>>();
+
+            foreach ( var value in values )
+            {
+                container.Bind( value );
+            }
+            
+            container.Inject( testClass );
+
+            Assert.AreEqual( testClass.Value.Count, values.Length );
+
+            for ( int i = 0; i < values.Length; i++ )
+            {
+                Assert.AreEqual( testClass.Value[i], values[i] );
+            }
         }
         #endregion Injection
     }
